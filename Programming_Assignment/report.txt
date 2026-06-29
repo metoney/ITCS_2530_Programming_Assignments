@@ -1,7 +1,7 @@
 ---------------- CREATIVE WRITING REPORT ----------------
-Favorite Book:           The Catcher in the Rye
-Favorite Author:         J.D. Salinger
-Writing Days:            4
-Total Hours:             10.25
-Average Hours/Day:       2.56
+Favorite Book:           c++
+Favorite Author:         c++ author
+Writing Days:            7
+Total Hours:             14.00
+Average Hours/Day:       2.00
 ----------------------------------------------------------

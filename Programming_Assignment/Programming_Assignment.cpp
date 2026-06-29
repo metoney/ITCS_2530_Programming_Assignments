@@ -1,4 +1,7 @@
-// Week05_Programming_Assignment.cpp
+// Andrew Kuyda
+// ITCS 2530
+// Prof. Koss
+// 6/28/2026
 
 // This program prompts the user for information related to creative writing.
 
@@ -9,6 +12,9 @@
 #include <windows.h>
 
 using namespace std;
+
+//***WEEK 06 - ADDED: Enum to represent the mood of each writing day
+enum dailyMood { WRITERS_BLOCK, NORMAL_PROGRESS, CREATIVE_FLOWSTATE };
 
 // This defines the various function prototypes.
 void changeColor(int color);
@@ -21,6 +27,10 @@ double getValidDouble(string prompt, double min, double max);
 
 double calculateAverage(double totalHours, int writingDays);
 void saveReport(string favoriteBook, string favoriteAuthor, int writingDays, double totalHours, double averageHours);
+
+//***WEEK 06 - ADDED: Prototypes for mood input and mood report functions
+void getMoodCounts(int moodCounts[], int size);
+void displayMoodReport(const int moodCounts[], int size);
 
 int main()
 {
@@ -35,6 +45,10 @@ int main()
     double totalHours = 0.0;
     double averageHours = 0.0;
 
+    //***WEEK 06 - ADDED: Array to store how many days the user felt each mood
+    const int MOOD_COUNT = 3;
+    int moodCounts[MOOD_COUNT] = { 0, 0, 0 };
+
     // This is a do...while loop that allows the user to run the menu repeatedly until they wish to quit.
     do
     {
@@ -42,7 +56,8 @@ int main()
         displayBanner();
         displayMenu();
 
-        menuChoice = getValidInt("Enter choice: ", 1, 4);
+        //***WEEK 06 - ADDED: Updated max menu choice from 4 to 5 to account for new mood report option
+        menuChoice = getValidInt("Enter choice: ", 1, 5);
 
         switch (menuChoice)
         {
@@ -67,6 +82,9 @@ int main()
 
                 totalHours += sessionHours; // This expression is equivalent to totalHours = totalHours + sessionHours.
             }
+
+            //***WEEK 06 - ADDED: Ask user to fill input their mood counts for the week
+            getMoodCounts(moodCounts, MOOD_COUNT);
 
             // This calculates the average number of hours by calling the calculateAverage function.
             averageHours = calculateAverage(totalHours, writingDays);
@@ -160,17 +178,27 @@ int main()
             break;
         }
 
+        //***WEEK 06 - ADDED: Display for mood report
         case 4:
+        {
+            displayMoodReport(moodCounts, MOOD_COUNT);
+            break;
+        }
+
+        //***WEEK 06 - ADDED: Quit moved from case 4 to case 5
+        case 5:
         {
             cout << "\nExiting program...\n";
             break;
         }
         }
 
-    } while (menuChoice != 4);
+        //***WEEK 06 - ADDED: Changed exit condition from 4 to 5
+    } while (menuChoice != 5);
 
     return 0;
 }
+
 
 // This function changes the console text color.
 void changeColor(int color)
@@ -198,7 +226,10 @@ void displayMenu()
     cout << "\n1. Add Writing Session" << endl;
     cout << "2. View Writing Report" << endl;
     cout << "3. Recommend Writing Level" << endl;
-    cout << "4. Quit" << endl;
+
+    //***WEEK 06 - ADDED: New menu option to view mood report
+    cout << "4. View Mood Report" << endl;
+    cout << "5. Quit" << endl;
 
     changeColor(7); // Default Gray
 }
@@ -310,6 +341,78 @@ void saveReport(string favoriteBook,
     outFile.close();
 
     cout << "\nReport saved as report.txt\n";
+}
+
+//***WEEK 06 - ADDED: Function to prompt user for how many days they felt each mood
+void getMoodCounts(int moodCounts[], int size)
+{
+    cout << endl << "Let's track how you felt during your writing sessions this week!" << endl;
+    cout << "For each type of mood below, enter how many days you felt that way (0-7):" << endl << endl;
+
+    for (int i = 0; i < size; i++)
+    {
+        dailyMood mood = static_cast<dailyMood>(i);
+
+        if (mood == WRITERS_BLOCK)
+            moodCounts[i] = getValidInt("Days you experienced Writer's Block: ", 0, 7);
+        else if (mood == NORMAL_PROGRESS)
+            moodCounts[i] = getValidInt("Days of Normal Progress: ", 0, 7);
+        else if (mood == CREATIVE_FLOWSTATE)
+            moodCounts[i] = getValidInt("Days you were in a Creative Flowstate: ", 0, 7);
+
+        cout << endl;
+    }
+}
+
+//***WEEK 06 - ADDED: Function to display the mood report and determine the most common mood
+void displayMoodReport(const int moodCounts[], int size)
+{
+    changeColor(11); // Cyan
+
+    cout << endl << "------------- MOOD REPORT -------------" << endl;
+
+    changeColor(7); // Default Gray
+
+    cout << left << setw(25) << "Writer's Block:" << moodCounts[WRITERS_BLOCK] << " days" << endl;
+    cout << left << setw(25) << "Normal Progress:" << moodCounts[NORMAL_PROGRESS] << " days" << endl;
+    cout << left << setw(25) << "Creative Flowstate:" << moodCounts[CREATIVE_FLOWSTATE] << " days" << endl;
+
+    //***WEEK 06 - ADDED: Loop through array to find the most common mood
+    int highest = 0;
+    dailyMood commonMood = WRITERS_BLOCK;
+
+    for (int i = 0; i < size; i++)
+    {
+        if (moodCounts[i] > highest)
+        {
+            highest = moodCounts[i];
+            commonMood = static_cast<dailyMood>(i);
+        }
+    }
+
+    changeColor(10); // Green
+
+    cout << endl << "Your most common mood this week was: ";
+
+    switch (commonMood)
+    {
+    case WRITERS_BLOCK:
+        cout << "Writer's Block!" << endl;
+        cout << "Don't worry, writer's block happens to everyone!" << endl;
+        break;
+    case NORMAL_PROGRESS:
+        cout << "Normal Progress!" << endl;
+        cout << "Great job getting some writing done!" << endl;
+        break;
+    case CREATIVE_FLOWSTATE:
+        cout << "Creative Flowstate!" << endl;
+        cout << "AWESOME! You got a lot written this week!" << endl;
+        break;
+    }
+
+    changeColor(7); // Default Gray
+
+    cout << "---------------------------------------" << endl;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
