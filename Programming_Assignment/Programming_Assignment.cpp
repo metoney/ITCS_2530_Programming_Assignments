@@ -13,8 +13,16 @@
 
 using namespace std;
 
-//***WEEK 06 - ADDED: Enum to represent the mood of each writing day
+//Added Enum to represent the mood of each writing day
 enum dailyMood { WRITERS_BLOCK, NORMAL_PROGRESS, CREATIVE_FLOWSTATE };
+
+//***WEEK 07 - ADDED struct to store writing session data
+struct WritingSession
+{
+    string date;
+    double hoursWritten;
+    dailyMood mood;
+};
 
 // This defines the various function prototypes.
 void changeColor(int color);
@@ -28,9 +36,13 @@ double getValidDouble(string prompt, double min, double max);
 double calculateAverage(double totalHours, int writingDays);
 void saveReport(string favoriteBook, string favoriteAuthor, int writingDays, double totalHours, double averageHours);
 
-//***WEEK 06 - ADDED: Prototypes for mood input and mood report functions
+//Added Prototypes for mood input and mood report functions
 void getMoodCounts(int moodCounts[], int size);
 void displayMoodReport(const int moodCounts[], int size);
+
+//**WEEK 07 - ADDED: Prototypes in the same style as original author
+void addSession(WritingSession& session, string sessionDate, double hours);
+void summarizeSessions(const WritingSession sessions[], int numDays);
 
 int main()
 {
@@ -45,9 +57,13 @@ int main()
     double totalHours = 0.0;
     double averageHours = 0.0;
 
-    //***WEEK 06 - ADDED: Array to store how many days the user felt each mood
+    //Added Array to store how many days the user felt each mood
     const int MOOD_COUNT = 3;
     int moodCounts[MOOD_COUNT] = { 0, 0, 0 };
+
+    //*** WEEK 07 - ADDED: Array to store weekly sessions
+    const int MAX_DAYS = 7;
+    WritingSession weekSessions[MAX_DAYS];
 
     // This is a do...while loop that allows the user to run the menu repeatedly until they wish to quit.
     do
@@ -56,7 +72,7 @@ int main()
         displayBanner();
         displayMenu();
 
-        //***WEEK 06 - ADDED: Updated max menu choice from 4 to 5 to account for new mood report option
+        //Added Updated max menu choice from 4 to 5 to account for new mood report option
         menuChoice = getValidInt("Enter choice: ", 1, 5);
 
         switch (menuChoice)
@@ -81,9 +97,12 @@ int main()
                     getValidDouble("Hours written on day " + to_string(day) + ": ", 0.0, 24.0);
 
                 totalHours += sessionHours; // This expression is equivalent to totalHours = totalHours + sessionHours.
+
+                //***WEEK 07 - Added: 
+                addSession(weekSessions[day - 1], "Day " + to_string(day), sessionHours);
             }
 
-            //***WEEK 06 - ADDED: Ask user to fill input their mood counts for the week
+            //Added Ask user to fill input their mood counts for the week
             getMoodCounts(moodCounts, MOOD_COUNT);
 
             // This calculates the average number of hours by calling the calculateAverage function.
@@ -136,6 +155,9 @@ int main()
 
             saveReport(favoriteBook, favoriteAuthor, writingDays, totalHours, averageHours);
 
+            //***WEEK 07 - ADDED: 
+            summarizeSessions(weekSessions, writingDays);
+
             break;
         }
 
@@ -178,14 +200,14 @@ int main()
             break;
         }
 
-        //***WEEK 06 - ADDED: Display for mood report
+        //Added Display for mood report
         case 4:
         {
             displayMoodReport(moodCounts, MOOD_COUNT);
             break;
         }
 
-        //***WEEK 06 - ADDED: Quit moved from case 4 to case 5
+        //Added Quit moved from case 4 to case 5
         case 5:
         {
             cout << "\nExiting program...\n";
@@ -193,7 +215,7 @@ int main()
         }
         }
 
-        //***WEEK 06 - ADDED: Changed exit condition from 4 to 5
+        //Added Changed exit condition from 4 to 5
     } while (menuChoice != 5);
 
     return 0;
@@ -227,7 +249,7 @@ void displayMenu()
     cout << "2. View Writing Report" << endl;
     cout << "3. Recommend Writing Level" << endl;
 
-    //***WEEK 06 - ADDED: New menu option to view mood report
+    //Added New menu option to view mood report
     cout << "4. View Mood Report" << endl;
     cout << "5. Quit" << endl;
 
@@ -343,7 +365,7 @@ void saveReport(string favoriteBook,
     cout << "\nReport saved as report.txt\n";
 }
 
-//***WEEK 06 - ADDED: Function to prompt user for how many days they felt each mood
+//Added Function to prompt user for how many days they felt each mood
 void getMoodCounts(int moodCounts[], int size)
 {
     cout << endl << "Let's track how you felt during your writing sessions this week!" << endl;
@@ -364,7 +386,7 @@ void getMoodCounts(int moodCounts[], int size)
     }
 }
 
-//***WEEK 06 - ADDED: Function to display the mood report and determine the most common mood
+//Added Function to display the mood report and determine the most common mood
 void displayMoodReport(const int moodCounts[], int size)
 {
     changeColor(11); // Cyan
@@ -377,7 +399,7 @@ void displayMoodReport(const int moodCounts[], int size)
     cout << left << setw(25) << "Normal Progress:" << moodCounts[NORMAL_PROGRESS] << " days" << endl;
     cout << left << setw(25) << "Creative Flowstate:" << moodCounts[CREATIVE_FLOWSTATE] << " days" << endl;
 
-    //***WEEK 06 - ADDED: Loop through array to find the most common mood
+    //Added Loop through array to find the most common mood
     int highest = 0;
     dailyMood commonMood = WRITERS_BLOCK;
 
@@ -413,6 +435,49 @@ void displayMoodReport(const int moodCounts[], int size)
     changeColor(7); // Default Gray
 
     cout << "---------------------------------------" << endl;
+}
+
+//***WEEK 07 - ADDED: Function to add values to Writing Session Struct
+void addSession(WritingSession& session, string sessionDate, double hours)
+{
+    session.date = sessionDate;
+    session.hoursWritten = hours;
+
+    if (hours < 1.0)
+        session.mood = WRITERS_BLOCK;
+    else if (hours < 3.0)
+        session.mood = NORMAL_PROGRESS;
+    else
+        session.mood = CREATIVE_FLOWSTATE;
+}
+
+//***WEEK 07 - ADDED: Function to output session info and averages
+void summarizeSessions(const WritingSession sessions[], int numDays)
+{
+    double total = 0.0;
+
+    cout << "\n----------- DAILY SESSION BREAKDOWN -----------\n";
+    cout << left << setw(10) << "Day" << setw(12) << "Hours" << "Mood" << endl;
+
+    for (int i = 0; i < numDays; i++)
+    {
+        total += sessions[i].hoursWritten;
+
+        cout << left << setw(10) << sessions[i].date
+            << setw(12) << fixed << setprecision(2) << sessions[i].hoursWritten;
+
+        switch (sessions[i].mood)
+        {
+        case WRITERS_BLOCK:      cout << "Writer's Block"; break;
+        case NORMAL_PROGRESS:    cout << "Normal Progress"; break;
+        case CREATIVE_FLOWSTATE: cout << "Creative Flowstate"; break;
+        }
+        cout << endl;
+    }
+
+    cout << "Average hours per day: " << fixed << setprecision(2)
+        << (total / numDays) << " hrs/day\n";
+    cout << "------------------------------------------------\n";
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

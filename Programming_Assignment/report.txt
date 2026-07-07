@@ -1,7 +1,7 @@
 ---------------- CREATIVE WRITING REPORT ----------------
 Favorite Book:           c++
 Favorite Author:         c++ author
-Writing Days:            7
-Total Hours:             14.00
-Average Hours/Day:       2.00
+Writing Days:            3
+Total Hours:             12.00
+Average Hours/Day:       4.00
 ----------------------------------------------------------
