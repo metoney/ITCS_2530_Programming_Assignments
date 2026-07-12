@@ -1,7 +1,7 @@
 // Andrew Kuyda
 // ITCS 2530
 // Prof. Koss
-// 6/28/2026
+// 7/10/2026
 
 // This program prompts the user for information related to creative writing.
 
@@ -16,12 +16,36 @@ using namespace std;
 //Added Enum to represent the mood of each writing day
 enum dailyMood { WRITERS_BLOCK, NORMAL_PROGRESS, CREATIVE_FLOWSTATE };
 
-//***WEEK 07 - ADDED struct to store writing session data
+//Added struct to store writing session data
 struct WritingSession
 {
     string date;
     double hoursWritten;
     dailyMood mood;
+};
+
+//***WEEK 08 - ADDED: class for WritingTracker code
+class WritingTracker
+{
+private:
+    WritingSession sessions[7];
+    int writingDays;
+    double totalHours;
+    string favoriteBook;
+    string favoriteAuthor;
+    int sessionsRecorded;  
+
+public:
+    WritingTracker(); 
+
+    void setFavorites(string book, string author);
+    int askWritingDays();
+    void addSession();
+    void showReport() const;
+    void saveReportToFile(const string& filename) const;
+    double computeAverageDuration() const;
+    int getWritingDays() const;
+    double getTotalHours() const;
 };
 
 // This defines the various function prototypes.
@@ -40,30 +64,20 @@ void saveReport(string favoriteBook, string favoriteAuthor, int writingDays, dou
 void getMoodCounts(int moodCounts[], int size);
 void displayMoodReport(const int moodCounts[], int size);
 
-//**WEEK 07 - ADDED: Prototypes in the same style as original author
+//Added Prototypes in the same style as original author
 void addSession(WritingSession& session, string sessionDate, double hours);
 void summarizeSessions(const WritingSession sessions[], int numDays);
 
+
+//***WEEK 08 - REPLACED old variables that tracked all data now in WritingTracker class
 int main()
 {
     int menuChoice;
-
-    // These are variables that store user input.
-    string favoriteBook = "";
-    string favoriteAuthor = "";
-    int writingDays = 0;
-
-    // These are variables used for calculations.
-    double totalHours = 0.0;
-    double averageHours = 0.0;
+    WritingTracker tracker;
 
     //Added Array to store how many days the user felt each mood
     const int MOOD_COUNT = 3;
     int moodCounts[MOOD_COUNT] = { 0, 0, 0 };
-
-    //*** WEEK 07 - ADDED: Array to store weekly sessions
-    const int MAX_DAYS = 7;
-    WritingSession weekSessions[MAX_DAYS];
 
     // This is a do...while loop that allows the user to run the menu repeatedly until they wish to quit.
     do
@@ -77,41 +91,28 @@ int main()
 
         switch (menuChoice)
         {
+        //*** WEEK 08 - REPLACED entirety of case1 with new code integrated into class instead of containing variables itself
         case 1:
         {
-            totalHours = 0.0;
+            string book = getValidString("What is your favorite book? ");
+            string author = getValidString("Who is your favorite author? ");
+            tracker.setFavorites(book, author);
 
-            // This prompts the user about what their favorite book is.
-            favoriteBook = getValidString("What is your favorite book? ");
+            int days = tracker.askWritingDays();
 
-            // This prompts the user about who their favorite author is.
-            favoriteAuthor = getValidString("Who is your favorite author? ");
-
-            // This prompts the user about how many days they wrote this week.
-            writingDays = getValidInt("How many days did you write this week? Please enter a number between 1 and 7. ", 1, 7);
-
-            // This is a for loop that runs a fixed number of times depending on writingDays.
-            for (int day = 1; day <= writingDays; day++)
+            // This is a for loop that runs a fixed number of times depending on writing days
+            for (int day = 1; day <= days; day++)
             {
-                double sessionHours =
-                    getValidDouble("Hours written on day " + to_string(day) + ": ", 0.0, 24.0);
-
-                totalHours += sessionHours; // This expression is equivalent to totalHours = totalHours + sessionHours.
-
-                //***WEEK 07 - Added: 
-                addSession(weekSessions[day - 1], "Day " + to_string(day), sessionHours);
+                tracker.addSession();
             }
 
             //Added Ask user to fill input their mood counts for the week
             getMoodCounts(moodCounts, MOOD_COUNT);
 
-            // This calculates the average number of hours by calling the calculateAverage function.
-            averageHours = calculateAverage(totalHours, writingDays);
+            changeColor(10);
 
-            changeColor(10); // Green
-
-            // This compound boolean comments on the user's writing habits.
-            if (writingDays >= 5 && averageHours >= 2.0)
+            //Comments for writing routine based on average days
+            if (tracker.getWritingDays() >= 5 && tracker.computeAverageDuration() >= 2.0)
             {
                 cout << "\nYou have a strong writing routine.\n";
             }
@@ -120,8 +121,8 @@ int main()
                 cout << "\nKeep building your writing habit.\n";
             }
 
-            // This compound boolean also comments on the user's writing habits.
-            if (writingDays >= 3 && totalHours >= 10.0)
+            //Comments on writing motivation based on amount written
+            if (tracker.getWritingDays() >= 3 && tracker.getTotalHours() >= 10.0)
             {
                 cout << "You are showing excellent commitment.\n";
             }
@@ -130,63 +131,18 @@ int main()
                 cout << "Try increasing your weekly writing time.\n";
             }
 
-            changeColor(7); // Default Gray
+            changeColor(7); 
 
-            // This displays all the information the user input in a well-formatted summary table.
-            cout << "\n";
-            cout << "------------- CREATIVE WRITING REPORT -------------\n";
-
-            cout << left << setw(25) << "Favorite Book:"
-                << favoriteBook << endl;
-
-            cout << left << setw(25) << "Favorite Author:"
-                << favoriteAuthor << endl;
-
-            cout << left << setw(25) << "Writing Days:"
-                << writingDays << endl;
-
-            cout << left << setw(25) << "Total Hours:" << fixed << setprecision(2)
-                << totalHours << endl;
-
-            cout << left << setw(25) << "Average Hours/Day:"
-                << averageHours << endl;
-
-            cout << "---------------------------------------------------\n";
-
-            saveReport(favoriteBook, favoriteAuthor, writingDays, totalHours, averageHours);
-
-            //***WEEK 07 - ADDED: 
-            summarizeSessions(weekSessions, writingDays);
+            tracker.showReport();
+            tracker.saveReportToFile("report.txt");
 
             break;
         }
 
+        //***WEEK 08 - REPLACED entire case with a refference to one function inside WritingTracker class
         case 2:
         {
-            cout << "\n------------- WRITING REPORT -------------\n";
-
-            if (writingDays == 0)
-            {
-                cout << "No writing session has been entered yet.\n";
-            }
-            else
-            {
-                cout << left << setw(25) << "Favorite Book:"
-                    << favoriteBook << endl;
-
-                cout << left << setw(25) << "Favorite Author:"
-                    << favoriteAuthor << endl;
-
-                cout << left << setw(25) << "Writing Days:"
-                    << writingDays << endl;
-
-                cout << left << setw(25) << "Total Hours:" << fixed << setprecision(2)
-                    << totalHours << endl;
-
-                cout << left << setw(25) << "Average Hours/Day:"
-                    << averageHours << endl;
-            }
-
+            tracker.showReport();
             break;
         }
 
@@ -320,51 +276,6 @@ double getValidDouble(string prompt, double min, double max)
     }
 }
 
-// This function calculates the average hours spent writing.
-double calculateAverage(double totalHours, int writingDays)
-{
-    return totalHours / writingDays;
-}
-
-// This function saves the report as a text file named report.txt.
-void saveReport(string favoriteBook,
-    string favoriteAuthor,
-    int writingDays,
-    double totalHours,
-    double averageHours)
-{
-    ofstream outFile("report.txt");
-
-    if (!outFile)
-    {
-        cout << "Error creating report file.\n";
-        return;
-    }
-
-    outFile << "---------------- CREATIVE WRITING REPORT ----------------\n";
-
-    outFile << left << setw(25) << "Favorite Book:"
-        << favoriteBook << endl;
-
-    outFile << left << setw(25) << "Favorite Author:"
-        << favoriteAuthor << endl;
-
-    outFile << left << setw(25) << "Writing Days:"
-        << writingDays << endl;
-
-    outFile << left << setw(25) << "Total Hours:" << fixed << setprecision(2)
-        << totalHours << endl;
-
-    outFile << left << setw(25) << "Average Hours/Day:"
-        << averageHours << endl;
-
-    outFile << "----------------------------------------------------------\n";
-
-    outFile.close();
-
-    cout << "\nReport saved as report.txt\n";
-}
-
 //Added Function to prompt user for how many days they felt each mood
 void getMoodCounts(int moodCounts[], int size)
 {
@@ -437,32 +348,89 @@ void displayMoodReport(const int moodCounts[], int size)
     cout << "---------------------------------------" << endl;
 }
 
-//***WEEK 07 - ADDED: Function to add values to Writing Session Struct
-void addSession(WritingSession& session, string sessionDate, double hours)
+//***WEEK 08 - ADDED a constructor for writing tracker that initializes all functions to 0 or an empty string
+WritingTracker::WritingTracker()
 {
-    session.date = sessionDate;
-    session.hoursWritten = hours;
-
-    if (hours < 1.0)
-        session.mood = WRITERS_BLOCK;
-    else if (hours < 3.0)
-        session.mood = NORMAL_PROGRESS;
-    else
-        session.mood = CREATIVE_FLOWSTATE;
+    writingDays = 0;
+    totalHours = 0.0;
+    favoriteBook = "";
+    favoriteAuthor = "";
+    sessionsRecorded = 0;
 }
 
-//***WEEK 07 - ADDED: Function to output session info and averages
-void summarizeSessions(const WritingSession sessions[], int numDays)
+
+void WritingTracker::setFavorites(string book, string author)
 {
-    double total = 0.0;
+    favoriteBook = book;
+    favoriteAuthor = author;
+}
+
+
+int WritingTracker::askWritingDays()
+{
+    writingDays = getValidInt("How many days did you write this week? Please enter a number between 1 and 7. ", 1, 7);
+    return writingDays;
+}
+
+
+void WritingTracker::addSession()
+{
+    double hours = getValidDouble("Hours written on day " + to_string(sessionsRecorded + 1) + ": ", 0.0, 24.0);
+
+    sessions[sessionsRecorded].date = "Day " + to_string(sessionsRecorded + 1);
+    sessions[sessionsRecorded].hoursWritten = hours;
+
+    if (hours < 1.0)
+        sessions[sessionsRecorded].mood = WRITERS_BLOCK;
+    else if (hours < 3.0)
+        sessions[sessionsRecorded].mood = NORMAL_PROGRESS;
+    else
+        sessions[sessionsRecorded].mood = CREATIVE_FLOWSTATE;
+
+    totalHours += hours;
+    sessionsRecorded++;
+}
+
+
+double WritingTracker::computeAverageDuration() const
+{
+    return totalHours / writingDays;
+}
+
+
+int WritingTracker::getWritingDays() const
+{
+    return writingDays;
+}
+
+
+double WritingTracker::getTotalHours() const
+{
+    return totalHours;
+}
+
+
+void WritingTracker::showReport() const
+{
+    if (writingDays == 0)
+    {
+        cout << "No writing session has been entered yet.\n";
+        return;
+    }
+
+    cout << "\n------------- CREATIVE WRITING REPORT -------------\n";
+    cout << left << setw(25) << "Favorite Book:" << favoriteBook << endl;
+    cout << left << setw(25) << "Favorite Author:" << favoriteAuthor << endl;
+    cout << left << setw(25) << "Writing Days:" << writingDays << endl;
+    cout << left << setw(25) << "Total Hours:" << fixed << setprecision(2) << totalHours << endl;
+    cout << left << setw(25) << "Average Hours/Day:" << computeAverageDuration() << endl;
+    cout << "---------------------------------------------------\n";
 
     cout << "\n----------- DAILY SESSION BREAKDOWN -----------\n";
     cout << left << setw(10) << "Day" << setw(12) << "Hours" << "Mood" << endl;
 
-    for (int i = 0; i < numDays; i++)
+    for (int i = 0; i < writingDays; i++)
     {
-        total += sessions[i].hoursWritten;
-
         cout << left << setw(10) << sessions[i].date
             << setw(12) << fixed << setprecision(2) << sessions[i].hoursWritten;
 
@@ -474,10 +442,30 @@ void summarizeSessions(const WritingSession sessions[], int numDays)
         }
         cout << endl;
     }
-
-    cout << "Average hours per day: " << fixed << setprecision(2)
-        << (total / numDays) << " hrs/day\n";
     cout << "------------------------------------------------\n";
+}
+
+
+void WritingTracker::saveReportToFile(const string& filename) const
+{
+    ofstream outFile(filename);
+
+    if (!outFile)
+    {
+        cout << "Error creating report file.\n";
+        return;
+    }
+
+    outFile << "---------------- CREATIVE WRITING REPORT ----------------\n";
+    outFile << left << setw(25) << "Favorite Book:" << favoriteBook << endl;
+    outFile << left << setw(25) << "Favorite Author:" << favoriteAuthor << endl;
+    outFile << left << setw(25) << "Writing Days:" << writingDays << endl;
+    outFile << left << setw(25) << "Total Hours:" << fixed << setprecision(2) << totalHours << endl;
+    outFile << left << setw(25) << "Average Hours/Day:" << computeAverageDuration() << endl;
+    outFile << "----------------------------------------------------------\n";
+
+    outFile.close();
+    cout << "\nReport saved as " << filename << "\n";
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
